@@ -83,20 +83,32 @@ const getUserReservations = async (req, res) => {
   const userId = req.user.id;
   try {
     const result = await pool.query(
-      `SELECT r.id AS reservation_id, r.created_at, s.id AS showtime_id, m.title AS movie_title, s.start_time, s.end_time
+      `SELECT 
+         r.id AS reservation_id, 
+         r.created_at, 
+         s.id AS showtime_id, 
+         m.title AS movie_title, 
+         s.start_time, 
+         s.end_time,
+         ARRAY_AGG(seats.seat_number ORDER BY seats.seat_number) AS seats
        FROM reservations r
        JOIN showtimes s ON r.showtime_id = s.id
        JOIN movies m ON s.movie_id = m.id
+       JOIN reservation_seats rs ON rs.reservation_id = r.id
+       JOIN seats ON rs.seat_id = seats.id
        WHERE r.user_id = $1
+       GROUP BY r.id, s.id, m.id
        ORDER BY r.created_at DESC`,
       [userId]
     );
+
     res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // Cancel a reservation (only upcoming ones)
 const cancelReservation = async (req, res) => {
