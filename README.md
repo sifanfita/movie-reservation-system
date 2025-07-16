@@ -53,7 +53,7 @@ A Node.js + Express backend for booking movie seats. Built with PostgreSQL and J
 ---
 
 # To run locally.
-git clone https://github.com/your-username/movie-reservation-system.git
+git clone https://github.com/sifanfita/movie-reservation-system.git
 cd movie-reservation-system
 npm install
 # Add .env
