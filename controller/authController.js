@@ -1,15 +1,16 @@
 const pool = require('../config/dbConnection');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
 
-const signup = async (req, res) => {
+const signup = asyncHandler( async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Please fill all fields' });
   }
 
-  try {
+  
     // Check if user exists
     const userExists = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (userExists.rows.length > 0) {
@@ -33,20 +34,17 @@ const signup = async (req, res) => {
     );
 
     res.status(201).json({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+  
+});
 
-const login = async (req, res) => {
+const login = asyncHandler( async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Please fill all fields' });
   }
 
-  try {
+  
     // Check user
     const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = userRes.rows[0];
@@ -68,10 +66,7 @@ const login = async (req, res) => {
     );
 
     res.json({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+  
+});
 
 module.exports = { signup, login };

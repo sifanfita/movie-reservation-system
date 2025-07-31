@@ -1,25 +1,25 @@
 const pool = require('../config/dbConnection');
+const asyncHandler = require('express-async-handler');
 
 // Get available seats for a showtime
-const getAvailableSeats = async (req, res) => {
+const getAvailableSeats = asyncHandler(async (req, res) => {
   const { showtimeId } = req.params;
-  try {
-    // Get seats that are NOT reserved
-    const result = await pool.query(
-      `SELECT id, seat_number FROM seats
-       WHERE showtime_id = $1 AND is_reserved = false
-       ORDER BY seat_number`,
+  if (!showtimeId) {
+    return res.status(400).json({ message: 'Showtime ID is required' });
+  }
+  // Get seats that are NOT reserved
+  const result = await pool.query(
+    `SELECT id, seat_number FROM seats
+     WHERE showtime_id = $1 AND is_reserved = false
+     ORDER BY seat_number`,
       [showtimeId]
     );
     res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+ 
+});
 
 // Reserve seats for a showtime
-const reserveSeats = async (req, res) => {
+const reserveSeats = asyncHandler( async (req, res) => {
   const userId = req.user.id;
   const { showtimeId } = req.params;
   const { seatIds } = req.body; // array of seat ids user wants to reserve
@@ -29,8 +29,8 @@ const reserveSeats = async (req, res) => {
   }
 
   const client = await pool.connect();
-
   try {
+  
     await client.query('BEGIN');
 
     // Check if seats are still available
@@ -68,20 +68,17 @@ const reserveSeats = async (req, res) => {
 
     await client.query('COMMIT');
 
-    res.status(201).json({ message: 'Reservation successful', reservationId });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error(err);
-    res.status(500).json({ message: 'Reservation failed' });
-  } finally {
+    res.status(201).json({ message: 'Reservation successful', reservationId })
+  } finally{
     client.release();
-  }
-};
+  };
+  
+});
 
 // Get reservations for logged-in user
-const getUserReservations = async (req, res) => {
+const getUserReservations = asyncHandler( async (req, res) => {
   const userId = req.user.id;
-  try {
+  
     const result = await pool.query(
       `SELECT 
          r.id AS reservation_id, 
@@ -103,15 +100,12 @@ const getUserReservations = async (req, res) => {
     );
 
     res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+  
+});
 
 
 // Cancel a reservation (only upcoming ones)
-const cancelReservation = async (req, res) => {
+const cancelReservation = asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const { id } = req.params; // reservation id
 
@@ -166,14 +160,10 @@ const cancelReservation = async (req, res) => {
     await client.query('COMMIT');
 
     res.json({ message: 'Reservation cancelled' });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error(err);
-    res.status(500).json({ message: 'Failed to cancel reservation' });
-  } finally {
+  }  finally {
     client.release();
   }
-};
+});
 
 module.exports = {
   getAvailableSeats,

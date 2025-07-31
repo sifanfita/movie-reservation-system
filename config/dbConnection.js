@@ -10,4 +10,4 @@ pool.on('connect', () => {
   console.log('Connected to the PostgreSQL database');
 });
 
-module.exports = pool;
+module.exports = pool; 

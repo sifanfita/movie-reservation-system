@@ -1,10 +1,11 @@
 const pool = require('../config/dbConnection');
+const asyncHandler = require('express-async-handler');
 
 // ✅ Promote a user to admin
-const promoteToAdmin = async (req, res) => {
+const promoteToAdmin = asyncHandler(async (req, res) => {
   const userId = req.params.id;
 
-  try {
+  
     const result = await pool.query(
       `UPDATE users SET role = 'admin' WHERE id = $1 RETURNING id, name, email, role`,
       [userId]
@@ -15,15 +16,12 @@ const promoteToAdmin = async (req, res) => {
     }
 
     res.json({ message: 'User promoted to admin', user: result.rows[0] });
-  } catch (err) {
-    console.error('Error promoting user:', err);
-    res.status(500).json({ message: 'Error promoting user' });
-  }
-};
+  
+});
 
 // ✅ View all reservations
-const getAllReservations = async (req, res) => {
-  try {
+const getAllReservations = asyncHandler(async (req, res) => {
+  
     const result = await pool.query(
       `SELECT r.id AS reservation_id,
               u.name AS user_name,
@@ -40,15 +38,12 @@ const getAllReservations = async (req, res) => {
     );
 
     res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching reservations:', err);
-    res.status(500).json({ message: 'Error fetching reservations' });
-  }
-};
+  
+});
 
 // ✅ Get showtime revenue & capacity stats
-const getStats = async (req, res) => {
-  try {
+const getStats = asyncHandler( async (req, res) => {
+  
     const result = await pool.query(`
       SELECT 
         s.id AS showtime_id,
@@ -68,11 +63,8 @@ const getStats = async (req, res) => {
     `);
 
     res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching stats:', err);
-    res.status(500).json({ message: 'Failed to get stats' });
-  }
-};
+  
+});
 
 module.exports = {
   promoteToAdmin,

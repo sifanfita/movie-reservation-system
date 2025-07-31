@@ -1,17 +1,18 @@
 const pool = require('../config/dbConnection');
+const asyncHandler = require('express-async-handler');
 
 // GET all movies
-const getAllMovies = async (req, res) => {
+const getAllMovies = asyncHandler(async (req, res) => {
   const result = await pool.query(
     `SELECT movies.*, genres.name AS genre 
      FROM movies 
      LEFT JOIN genres ON movies.genre_id = genres.id`
   );
   res.json(result.rows);
-};
+});
 
 // GET one movie
-const getMovieById = async (req, res) => {
+const getMovieById = asyncHandler(async (req, res) => {
   const result = await pool.query(
     `SELECT movies.*, genres.name AS genre 
      FROM movies 
@@ -23,10 +24,10 @@ const getMovieById = async (req, res) => {
     return res.status(404).json({ message: 'Movie not found' });
   }
   res.json(result.rows[0]);
-};
+});
 
 // POST create movie
-const createMovie = async (req, res) => {
+const createMovie = asyncHandler(async (req, res) => {
   const { title, description, poster_url, genre_id } = req.body;
   const created_by = req.user.id;
 
@@ -35,7 +36,7 @@ const createMovie = async (req, res) => {
     return res.status(400).json({ message: 'Please provide all required fields' });
   }
 
-  try {
+  
     const result = await pool.query(
       `INSERT INTO movies (title, description, poster_url, genre_id, created_by) 
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
@@ -43,15 +44,13 @@ const createMovie = async (req, res) => {
     );
 
     res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error('Error creating movie:', err);
-    res.status(500).json({ message: 'Server error' });
+
   }
-};
+);
 
 
 // PUT update movie
-const updateMovie = async (req, res) => {
+const updateMovie = asyncHandler(async (req, res) => {
   const { title, description, poster_url, genre_id } = req.body;
   const { id } = req.params;
 
@@ -59,7 +58,7 @@ const updateMovie = async (req, res) => {
     return res.status(400).json({ message: 'Please provide all required fields' });
   }
 
-  try {
+ 
     const result = await pool.query(
       `UPDATE movies 
        SET title = $1, description = $2, poster_url = $3, genre_id = $4 
@@ -72,15 +71,12 @@ const updateMovie = async (req, res) => {
     }
 
     res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Error updating movie:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+  
+});
 
 
 // DELETE movie
-const deleteMovie = async (req, res) => {
+const deleteMovie = asyncHandler( async (req, res) => {
   const { id } = req.params;
   const result = await pool.query(`DELETE FROM movies WHERE id = $1 RETURNING *`, [id]);
 
@@ -89,7 +85,7 @@ const deleteMovie = async (req, res) => {
   }
 
   res.json({ message: 'Movie deleted successfully' });
-};
+});
 
 module.exports = {
   getAllMovies,
