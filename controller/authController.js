@@ -12,7 +12,7 @@ const signup = asyncHandler( async (req, res) => {
 
   
     // Check if user exists
-    const userExists = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const userExists = await pool.query('SELECT 1 FROM users WHERE email = $1 LIMIT 1', [email]);
     if (userExists.rows.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -33,7 +33,11 @@ const signup = asyncHandler( async (req, res) => {
       { expiresIn: '1d' }
     );
 
-    res.status(201).json({ token });
+    res.status(201).json({
+  message: 'User registered successfully',
+  token,
+  user: newUser.rows[0]
+});
   
 });
 
@@ -46,7 +50,8 @@ const login = asyncHandler( async (req, res) => {
 
   
     // Check user
-    const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const userRes = await pool.query('SELECT id, email, password, name FROM users WHERE email = $1 LIMIT 1',
+  [email]);
     const user = userRes.rows[0];
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -65,7 +70,14 @@ const login = asyncHandler( async (req, res) => {
       { expiresIn: '1d' }
     );
 
-    res.json({ token });
+    res.json({ token,
+      user: {
+    id: user.id,
+    name: user.name,
+    role: user.role
+  }
+
+     });
   
 });
 
